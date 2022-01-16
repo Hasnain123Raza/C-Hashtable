@@ -2,6 +2,7 @@
 #define HASHTABLE_H
 
 #include <stdlib.h>
+#include <string.h>
 
 typedef struct Bucket {
     void *value;
@@ -10,6 +11,7 @@ typedef struct Bucket {
 
 typedef int (*Hasher)(void *);
 typedef int (*Comparator)(void *, void *);
+typedef void (*Free)(void *);
 
 typedef struct {
     int minimumCapacity;
@@ -22,7 +24,7 @@ typedef struct {
 
 Hashtable *hashtableCreate(int minimumCapacity, Hasher hasher, Comparator comparator);
 int hashtableResize(Hashtable *hashtable, int newCapacity);
-void hashtableFree(Hashtable *hashtable);
+void hashtableFree(Hashtable *hashtable, Free freeFunction);
 
 int hashtableAdd(Hashtable *hashtable, void *value);
 void *hashtableRemove(Hashtable *hashtable, void *value);
