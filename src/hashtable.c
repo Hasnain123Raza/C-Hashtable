@@ -62,16 +62,14 @@ void hashtableFree(Hashtable *hashtable, Free freeFunction)
     if (!hashtable)
         return;
 
-    if (!freeFunction)
-        freeFunction = free;
-
     for (int counter = 0; counter < hashtable->capacity; counter++)
     {
         Bucket *bucket = hashtable->buckets[counter];
         while (bucket)
         {
             Bucket *next = bucket->next;
-            freeFunction(bucket->value);
+            if (freeFunction)
+                freeFunction(bucket->value);
             free(bucket);
             bucket = next;
         }
@@ -110,7 +108,7 @@ int hashtableAdd(Hashtable *hashtable, void *value)
         hashtable->length++;
 
         float loadFactor = (float)hashtable->length / hashtable->capacity;
-        if (loadFactor > 0.75)
+        if (loadFactor >= 0.75)
             hashtableResize(hashtable, hashtable->capacity * 2);
     }
 
@@ -123,6 +121,7 @@ void *hashtableRemove(Hashtable *hashtable, void *value)
         return NULL;
     
     Bucket *foundBucket = NULL;
+    void *foundValue = NULL;
 
     int index = hashtable->hasher(value) % hashtable->capacity;
     Bucket *bucket = hashtable->buckets[index];
@@ -136,7 +135,7 @@ void *hashtableRemove(Hashtable *hashtable, void *value)
             hashtable->length--;
 
             float loadFactor = (float)hashtable->length / hashtable->capacity;
-            if (loadFactor < 0.25)
+            if (loadFactor <= 0.25)
                 hashtableResize(hashtable, hashtable->capacity / 2);
         }
         else
@@ -154,7 +153,13 @@ void *hashtableRemove(Hashtable *hashtable, void *value)
         }
     }
 
-    return foundBucket;
+    if (foundBucket)
+    {
+        foundValue = foundBucket->value;
+        free(foundBucket);
+    }
+
+    return foundValue;
 }
 
 void *hashtableGet(Hashtable *hashtable, void *value)
